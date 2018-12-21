@@ -1,42 +1,34 @@
-class Stopwatch {
-    constructor(display) {
+class Stopwatch extends React.Component {
+    constructor(props) {
+        super(props);
         this.running = false;
-        this.display = display;
-        this.reset();
-        this.print(this.times);
-    }
 
-    reset() {
-        this.times = {
-            minutes: 0,
-            seconds: 0,
-            miliseconds: 0
+        this.state = {
+            times: {
+                minutes: 0,
+                seconds: 0,
+                miliseconds: 0  
+            },
+            results: []
         };
     }
 
-    print() {
-        this.display.innerText = this.format(this.times);
+    reset() {
+        this.setState({
+            times: {
+                minutes: 0,
+                seconds: 0,
+                miliseconds: 0 
+            }
+        });
     }
 
     resetTimer() {
         this.reset();
-        this.print(this.times);
         if (this.running) {
             this.running = false;
             clearInterval(this.watch);
         }    
-    }
-
-    addTimeToList() {
-        const liEl = document.createElement('li');
-
-        liEl.innerText = this.format(this.times);
-        document.querySelector('.results').appendChild(liEl);
-    }
-
-    clear() {
-        const clear = document.querySelector('.results');
-        clear.innerHTML= '';
     }
 
     format(times) {
@@ -53,24 +45,60 @@ class Stopwatch {
     step() {
         if (!this.running) return;
         this.calculate();
-        this.print();
     }
 
     calculate() {
-        this.times.miliseconds += 1;
-        if (this.times.miliseconds >= 100) {
-            this.times.seconds += 1;
-            this.times.miliseconds = 0;
+        const times = Object.assign({}, this.state.times);
+
+        times.miliseconds += 1;
+        if (times.miliseconds >= 100) {
+            times.seconds += 1;
+            times.miliseconds = 0;
         }
-        if (this.times.seconds >= 60) {
-            this.times.minutes += 1;
-            this.times.seconds = 0;
+        if (times.seconds >= 60) {
+            times.minutes += 1;
+            times.seconds = 0;
         }
+
+        this.setState({ times });
     }
     
     stop() {
         this.running = false;
         clearInterval(this.watch);
+    }
+
+    add() {
+        const results = this.state.results.slice();
+
+        results.push(this.format(this.state.times));
+        this.setState({ results });
+    }
+
+    clear() {
+        this.setState({ results: [] });
+    }
+
+    render() {
+        return (
+            <div>
+                <nav className="controls">
+                    <a href="#" className="button" onClick={this.start.bind(this)}>Start</a>
+                    <a href="#" className="button" onClick={this.stop.bind(this)}>Stop</a>
+                </nav>
+                <div className="stopwatch">
+                    { this.format(this.state.times) }
+                </div>
+                <div class="controls">
+                    <a href="#" className="button" onClick={this.resetTimer.bind(this)}>Reset</a>
+                    <a href="#" className="button" onClick={this.add.bind(this)}>Save</a>
+                    <a href="#" className="button" onClick={this.clear.bind(this)}>Clear</a>
+                </div>
+                <ul className="results">
+                    {this.state.results.map(result => <li>{result}</li>)}
+                </ul>
+            </div>
+        )
     }
 }
 
@@ -82,20 +110,7 @@ function pad0(value) {
     return result;
 }
 
-const stopwatch = new Stopwatch(
-    document.querySelector('.stopwatch'));
-
-let startButton = document.getElementById('start');
-startButton.addEventListener('click', () => stopwatch.start());
-
-let stopButton = document.getElementById('stop');
-stopButton.addEventListener('click', () => stopwatch.stop());
-
-let resetButton = document.getElementById('reset');
-resetButton.addEventListener('click', () => stopwatch.resetTimer());
-
-let addButton = document.getElementById('add');
-addButton.addEventListener('click', () => stopwatch.addTimeToList());
-
-let clearButton = document.getElementById('clear');
-clearButton.addEventListener('click', () => stopwatch.clear());
+ReactDOM.render(
+    <Stopwatch />,
+    document.getElementById('root')
+);
